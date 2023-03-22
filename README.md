@@ -1,2 +1,2 @@
 # tinyjq
-TinyJq - is tiny vertion of jquery with some assitional utilite functions
+TinyJq - is tiny version of jquery with some additional utilite functions
