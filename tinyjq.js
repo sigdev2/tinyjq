@@ -63,14 +63,13 @@
 	}
 
 	class TinyJqExt {
-		#root
+		#root = null
 
 		constructor(root) {
 			this.#root = root;
 		}
 		
 		getPaths() {
-			// todo: optimizate
 			var out = [];
 			this.#root.each(() => out.push(getPath(this)));
 			return out;
@@ -100,7 +99,7 @@
 	}
 
     class TinyJq {
-        #node;
+        #node = []
 
 		constructor(element) {
             this.#node = ((element instanceof TinyJq) ? element.#node : (element ? ('length' in element ? element : [element]) : []));
@@ -112,9 +111,12 @@
 			    return new TinyJq();
 			if (selector instanceof HTMLElement || selector instanceof NodeList)
 				return new TinyJq(selector);
-				
-		    const paths = this.tinyjq.getPaths().map((v) => v + ' ' + selector).join(', ');
-			return new TinyJq(document.querySelectorAll(paths));
+
+			let results = [];
+			for (const item of this.#node)
+			    results = results.concat(item.querySelectorAll(selector));
+
+			return new TinyJq(results);
 		}
 
 		hasClass() {
