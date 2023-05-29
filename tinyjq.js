@@ -521,7 +521,8 @@
 	}
 
     if ('browser_module' in global) {
-        global['browser_module'].export('tinyjq', () => $, false);
+        global['browser_module'].export('tinyjq', () => $);
+        global['browser_module'].export('$', () => $);
     } else {
         if ('tinyjq' in global)
             console.warn('Module "tinyjq" is already exported! Ignore loading!');
