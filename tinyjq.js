@@ -108,7 +108,8 @@
 		$(selector) {
 			if (!selector)
 			    return new TinyJq();
-			if (selector instanceof HTMLElement || selector instanceof NodeList || selector instanceof DocumentFragment)
+			if (selector instanceof HTMLElement || selector instanceof NodeList ||
+				selector instanceof DocumentFragment || selector instanceof Document)
 				return new TinyJq(selector);
 
 			let results = [];
@@ -439,7 +440,8 @@
 				return document.addEventListener('DOMContentLoaded', selector);
 			if (!selector)
 			    return new TinyJq();
-			if (selector instanceof HTMLElement || selector instanceof NodeList || selector instanceof DocumentFragment)
+			if (selector instanceof HTMLElement || selector instanceof NodeList ||
+				selector instanceof DocumentFragment || selector instanceof Document)
 				return new TinyJq(selector);
 			return new TinyJq(document.querySelectorAll(selector));
 		}
