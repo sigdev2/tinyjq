@@ -17,23 +17,22 @@
 	function keyValueSetterGetter(tinyjqObj, setter, getter, key, value = null) {
 		var val = [];
 		if (typeof key == 'object') {
-			tinyjqObj.each(() => {
+			tinyjqObj.each((_, node) => {
 				for (const [prop, propVal] of Object.entries(key))
-				    setter.apply(this, [prop, propVal]);
+				    setter.apply(node, [prop, propVal]);
 			});
 		} else {
-			tinyjqObj.each(() => {
+			tinyjqObj.each((_, node) => {
 				if (value == null)
-					val.push(getter.apply(this, [key]));
+					val.push(getter.apply(node, [key]));
 				else
-				    setter.apply(this, [key, value]);
+				    setter.apply(node, [key, value]);
 			});
 		}
 
 		return arrayToValue(val);
 	}
 	
-
 	function getPath(node) {
 		var path = '';
 		while(node != document.documentElement) {
@@ -71,14 +70,14 @@
 		
 		getPaths() {
 			var out = [];
-			this.#root.each(() => out.push(getPath(this)));
+			this.#root.each((_, node) => out.push(getPath(node)));
 			return out;
 		}
 		
 		classes() {
 			var classes = new Set();
-			this.#root.each(() => {
-				for (const item of this.classList)
+			this.#root.each((_, node) => {
+				for (const item of node.classList)
 				    classes.add(item);
 			});
 			
@@ -87,12 +86,12 @@
 		
 		insert(tag, attrs = {}, html = '') {
 			if (tag)
-				this.#root.each(() => {
+				this.#root.each((_, node) => {
 					var el = document.createElement(tag);
 				    for (const [prop, propVal] of Object.entries(attrs))
 					    el.setAttribute(prop, propVal);
 					el.innerHTML = html
-					this.appendChild(el);
+					node.appendChild(el);
 				});
             return this;
 		}
@@ -109,12 +108,12 @@
 		$(selector) {
 			if (!selector)
 			    return new TinyJq();
-			if (selector instanceof HTMLElement || selector instanceof NodeList)
+			if (selector instanceof HTMLElement || selector instanceof NodeList || selector instanceof DocumentFragment)
 				return new TinyJq(selector);
 
 			let results = [];
 			for (const item of this.#node)
-			    results = results.concat(item.querySelectorAll(selector));
+			    results = results.concat(Array.from(item.querySelectorAll(selector)));
 
 			return new TinyJq(results);
 		}
@@ -131,8 +130,8 @@
 		addClass() {
 			if (arguments.length <= 0)
 			    return this;
-			this.each(() => {
-				this.classList.add.apply(this.classList, arguments);
+			this.each((_, node) => {
+				node.classList.add.apply(node.classList, arguments);
 			});
 			return this;
 		}
@@ -140,35 +139,35 @@
 		removeClass() {
 			if (arguments.length <= 0)
 			    return this;
-		    this.each(() => {
-				this.classList.remove.apply(this.classList, arguments);
+		    this.each((_, node) => {
+				node.classList.remove.apply(node.classList, arguments);
 			});
 			return this;
 		}
 		
 		html(htmlText = undefined) {
 			if (htmlText || htmlText === '')
-			    return this.each(() => this.innerHTML = htmlText);
+			    return this.each((_, node) => node.innerHTML = htmlText);
 
             var val = [];
-            this.each(() => val.push(this.innerHTML));
+            this.each((_, node) => val.push(node.innerHTML));
 			return arrayToValue(val);
 		}
 
 		append(htmlText = undefined) {
 			if (htmlText)
-			    this.each(() => this.innerHTML += htmlText);
+			    this.each((_, node) => node.innerHTML += htmlText);
 			return this;
 		}
 
 		prepend(htmlText = undefined) {
 			if (htmlText)
-			    this.each(() => this.innerHTML = htmlText + this.innerHTML);
+			    this.each((_, node) => node.innerHTML = htmlText + node.innerHTML);
 			return this;
 		}
 
 		empty() {
-			this.each(() => this.innerHTML = '');
+			this.each((_, node) => node.innerHTML = '');
 			return this;
 		}
 		
@@ -184,12 +183,12 @@
 		}
 		
 		on(type, callback, useCaptureOptions = undefined) {
-			this.each(() => this.addEventListener(type, callback, useCaptureOptions));
+			this.each((_, node) => node.addEventListener(type, callback, useCaptureOptions));
 			return this;
 		}
 		
 		off(type, callback, useCaptureOptions = undefined) {
-			this.each(() => this.removeEventListener(type, callback, useCaptureOptions));
+			this.each((_, node) => node.removeEventListener(type, callback, useCaptureOptions));
 			return this;
 		}
 		
@@ -203,23 +202,23 @@
 		}
 
 		hide() {
-			this.each(() => {
-				const displayVal = this.style.display.toLowerCase();
+			this.each((_, node) => {
+				const displayVal = node.style.display.toLowerCase();
 				if (displayVal != 'block' && displayVal != 'none')
-					this.dataset.hidedDisplay = displayVal;
-				this.style.display = 'none';
+					node.dataset.hidedDisplay = displayVal;
+				node.style.display = 'none';
 			});
 			return this;
 		}
 
 		show() {
-			this.each(() => {
-				var old = this.dataset.hidedDisplay;
+			this.each((_, node) => {
+				var old = node.dataset.hidedDisplay;
 				if (!old)
 				    old = 'block';
 				else 
-				    delete this.dataset.hidedDisplay;
-				this.style.display = old;
+				    delete node.dataset.hidedDisplay;
+				node.style.display = old;
 			});
 			return this;
 		}
@@ -252,24 +251,24 @@
 			}
 
 			if (typeof coordiantes == 'function') {
-			    this.each((index) => {
-					var rect = this.getBoundingClientRect();
+			    this.each((i, node) => {
+					var rect = node.getBoundingClientRect();
 					var selfCoords = new Position(rect.top + document.body.scrollTop,
 										          rect.left + document.body.scrollLeft);
-					var newCoords = coordiantes(index, selfCoords);
+					var newCoords = coordiantes(i, selfCoords);
 					if ('top' in newCoords)
-					    this.style.top = newCoords.top + 'px';
+					    node.style.top = newCoords.top + 'px';
 					if ('left' in newCoords)
-					    this.style.left = newCoords.left + 'px';
+					    node.style.left = newCoords.left + 'px';
 				});
 				return;
 			}
 
-			this.each(() => {
+			this.each((_, node) => {
 				if ('top' in coordiantes)
-					this.style.top = newCoords.top + 'px';
+					node.style.top = newCoords.top + 'px';
 				if ('left' in coordiantes)
-					this.style.left = newCoords.left + 'px';
+					node.style.left = newCoords.left + 'px';
 			});
 		}
 
@@ -440,7 +439,7 @@
 				return document.addEventListener('DOMContentLoaded', selector);
 			if (!selector)
 			    return new TinyJq();
-			if (selector instanceof HTMLElement || selector instanceof NodeList)
+			if (selector instanceof HTMLElement || selector instanceof NodeList || selector instanceof DocumentFragment)
 				return new TinyJq(selector);
 			return new TinyJq(document.querySelectorAll(selector));
 		}
