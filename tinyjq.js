@@ -19,14 +19,14 @@
 		if (typeof key == 'object') {
 			tinyjqObj.each((_, node) => {
 				for (const [prop, propVal] of Object.entries(key))
-				    setter.apply(node, [prop, propVal]);
+				    setter.apply(node, [node, prop, propVal]);
 			});
 		} else {
 			tinyjqObj.each((_, node) => {
 				if (value == null)
 					val.push(getter.apply(node, [key]));
 				else
-				    setter.apply(node, [key, value]);
+				    setter.apply(node, [node, key, value]);
 			});
 		}
 
@@ -178,8 +178,8 @@
 			    for (const [prop, propVal] of Object.entries(attrs))
 				    actualKey[$.tinyjq.camelCase(prop)] = propVal;
 
-			return keyValueSetterGetter(this, (prop, val) => this.style[prop] = val,
-										      (prop) => this.style[prop], actualKey, value);
+			return keyValueSetterGetter(this, (node, prop, val) => node.style[prop] = val,
+										      (node, prop) => node.style[prop], actualKey, value);
 		}
 		
 		on(type, callback, useCaptureOptions = undefined) {
@@ -228,8 +228,8 @@
 		}
 		
 		attr(key, value = null) {
-			return keyValueSetterGetter(this, (prop, val) => this.setAttribute(prop, val),
-										      (prop) => this.getAttribute(prop), key, value);
+			return keyValueSetterGetter(this, (node, prop, val) => node.setAttribute(prop, val),
+										      (node, prop) => node.getAttribute(prop), key, value);
 		}
 
 		get(index = 0) {
