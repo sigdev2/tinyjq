@@ -205,7 +205,7 @@
 		hide() {
 			this.each((_, node) => {
 				const displayVal = node.style.display.toLowerCase();
-				if (displayVal != 'block' && displayVal != 'none')
+				if (displayVal != '' && displayVal != 'none')
 					node.dataset.hidedDisplay = displayVal;
 				node.style.display = 'none';
 			});
@@ -216,7 +216,7 @@
 			this.each((_, node) => {
 				var old = node.dataset.hidedDisplay;
 				if (!old)
-				    old = 'block';
+				    old = '';
 				else 
 				    delete node.dataset.hidedDisplay;
 				node.style.display = old;
