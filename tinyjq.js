@@ -15,7 +15,7 @@
 	}
 
 	function keyValueSetterGetter(tinyjqObj, setter, getter, key, value = null) {
-		var val = [];
+		let val = [];
 		if (typeof key == 'object') {
 			tinyjqObj.each((_, node) => {
 				for (const [prop, propVal] of Object.entries(key))
@@ -34,15 +34,15 @@
 	}
 	
 	function getPath(node) {
-		var path = '';
+		let path = '';
 		while(node != document.documentElement) {
-			var name = node.localName;
+			let name = node.localName;
 			if (!name)
 				break;
 
 			name = name.toLowerCase();
 			if (node.parentNode.childNodes.length > 1) {
-				var index = Array.prototype.indexOf.call(node.parentNode.childNodes, node) + 1; 
+				const index = Array.prototype.indexOf.call(node.parentNode.childNodes, node) + 1; 
 				if (index > 1)
 					name += ':nth-child(' + index + ')';
 			}
@@ -69,13 +69,13 @@
 		}
 		
 		getPaths() {
-			var out = [];
+			let out = [];
 			this.#root.each((_, node) => out.push(getPath(node)));
 			return out;
 		}
 		
 		classes() {
-			var classes = new Set();
+			let classes = new Set();
 			this.#root.each((_, node) => {
 				for (const item of node.classList)
 				    classes.add(item);
@@ -87,7 +87,7 @@
 		insert(tag, attrs = {}, html = '') {
 			if (tag)
 				this.#root.each((_, node) => {
-					var el = document.createElement(tag);
+					let el = document.createElement(tag);
 				    for (const [prop, propVal] of Object.entries(attrs))
 					    el.setAttribute(prop, propVal);
 					el.innerHTML = html
@@ -150,7 +150,7 @@
 			if (htmlText || htmlText === '')
 			    return this.each((_, node) => node.innerHTML = htmlText);
 
-            var val = [];
+            let val = [];
             this.each((_, node) => val.push(node.innerHTML));
 			return arrayToValue(val);
 		}
@@ -173,8 +173,8 @@
 		}
 		
 		css(key, value = null) {
-			var isObject = (typeof key == 'object');
-			var actualKey = (isObject ? {} : $.tinyjq.camelCase(key));
+			const isObject = (typeof key == 'object');
+			let actualKey = (isObject ? {} : $.tinyjq.camelCase(key));
 			if (isObject)
 			    for (const [prop, propVal] of Object.entries(attrs))
 				    actualKey[$.tinyjq.camelCase(prop)] = propVal;
@@ -194,7 +194,7 @@
 		}
 		
 		each(callback) {
-			var i = 0;
+			let i = 0;
 			for (const item of this.#node) {
 			    callback.call(item, i, item);
 				++i;
@@ -214,7 +214,7 @@
 
 		show() {
 			this.each((_, node) => {
-				var old = node.dataset.hidedDisplay;
+				let old = node.dataset.hidedDisplay;
 				if (!old)
 				    old = '';
 				else 
@@ -240,23 +240,53 @@
 		first() {
 			return new TinyJq(this.#node[0]);
 		}
+
+		next(selector) {
+			let items = [];
+			this.each((_, node) => {
+				let nextSibling = node.nextSibling;
+				while (nextSibling) {
+					if (!!selector && nextSibling.matches(selector))
+					    break;
+					while(nextSibling && nextSibling.nodeType != 1)
+						nextSibling = nextSibling.nextSibling;
+				}
+				items.push(nextSibling);
+			});
+			return new TinyJq(items);
+		}
+
+		prev(selector) {
+			let items = [];
+			this.each((_, node) => {
+				let previousSibling = node.previousSibling ;
+				while (previousSibling) {
+					if (!!selector && previousSibling .matches(selector))
+					    break;
+					while(previousSibling && previousSibling.nodeType != 1)
+					    previousSibling = previousSibling.previousSibling;
+				}
+				items.push(previousSibling);
+			});
+			return new TinyJq(items);
+		}
 	
 		offset(coordiantes = undefined) {
             if (!coordiantes || ((!('top' in coordiantes)) && (!('left' in coordiantes)))) {
-				var item = this.#node[0];
+				const item = this.#node[0];
 				if (!item)
 					return;
-				var rect = item.getBoundingClientRect();
+				const rect = item.getBoundingClientRect();
 				return new Position(rect.top + document.body.scrollTop,
 									rect.left + document.body.scrollLeft);
 			}
 
 			if (typeof coordiantes == 'function') {
 			    this.each((i, node) => {
-					var rect = node.getBoundingClientRect();
-					var selfCoords = new Position(rect.top + document.body.scrollTop,
-										          rect.left + document.body.scrollLeft);
-					var newCoords = coordiantes(i, selfCoords);
+					const rect = node.getBoundingClientRect();
+					const selfCoords = new Position(rect.top + document.body.scrollTop,
+										            rect.left + document.body.scrollLeft);
+					let newCoords = coordiantes(i, selfCoords);
 					if ('top' in newCoords)
 					    node.style.top = newCoords.top + 'px';
 					if ('left' in newCoords)
@@ -276,21 +306,9 @@
 		is(selector) {
 			if (!selector)
 			    return false;
-			var check = (typeof selector == 'function' ? selector : (el) => el.matches(selector));
+			const check = (typeof selector == 'function' ? selector : (el) => el.matches(selector));
 			for (const item of this.#node)
 			    if (check(item))
-				    return true;
-			return false;
-		}
-	
-		closest(selector) {
-            if (this.is(selector))
-			   return true;
-			var parents = new Set();
-			for (const item of this.#node)
-			    parents.add(item.parentElement);
-			for (const item of parents)
-			    if ((new TinyJq(item)).closest(selector))
 				    return true;
 			return false;
 		}
@@ -320,18 +338,18 @@
 		}
 		
 		sprintf() {
-			var str = arguments[0].replace(/\{\{([^\}]+)\}\}/g, (match, group1) => eval(group1));
-			var arr = null;
+			let str = arguments[0].replace(/\{\{([^\}]+)\}\}/g, (match, group1) => eval(group1));
+			let arr = null;
 			if (arguments.length == 2) {
-				var second = arguments[1];
+				let second = arguments[1];
 				if (Array.isArray(second)) {
 					arr = second;
 				} else if (typeof second == 'object') {
 					str = str.replace(new RegExp('%([^%]*)%', 'g'), (match, group1) => {
 						if (group1.length == 0)
 							return '&#37+;';
-						var keys = group1.split('.');
-						var ret = ''
+						const keys = group1.split('.');
+						let ret = ''
 						for (const key of keys)
 						    ret += second[key];
 						return ret;
@@ -376,8 +394,8 @@
 
 		on(selector, eventType, handler, context = null) {
 			// map selectors by type
-			var types = null;
-			var newReg = false;
+			let types = null;
+			let newReg = false;
 			if (!this.#listening.has(eventType)) {
 				types = new Map();
 				this.#listening.set(eventType, types);
@@ -387,7 +405,7 @@
 			}
 
 			// save handler
-			var handlersSet = null;
+			let handlersSet = null;
 			if (!types.has(selector)) {
 				handlersSet = new Set();
 				types.set(selector, handlersSet);
@@ -401,10 +419,10 @@
 			if (newReg) {
 				// add listener
 				document.addEventListener(eventType, (event) => {
-					for (var [key, value] of types) {
-						var listeningTarget = $.closest(event.target, key);
+					for (const [key, value] of types) {
+						const listeningTarget = event.target.closest(key);
 						if (listeningTarget != null)
-							for (var h of value)
+							for (const h of value)
 								h.call(listeningTarget, event, context);
 					}
 				});
@@ -413,12 +431,12 @@
 
 		off(selector, eventType, handler = null) {
 			if (this.#listening.has(eventType)) {
-				var types = this.#listening.get(eventType);
+				let types = this.#listening.get(eventType);
 				if (types.has(selector)) {
 					if (handler == null) {
 						types.delete(selector);
 					} else {
-						var hs = types.get(selector);
+						let hs = types.get(selector);
 						if (hs.has(handler)) {
 							hs.delete(handler);
 							if (hs.size <= 0)
@@ -435,7 +453,7 @@
 		    return new TinyJq();
 		
 		if (arguments.length == 1) {
-			var selector = arguments[0];
+			let selector = arguments[0];
             if (typeof selector == 'function')
 				return document.addEventListener('DOMContentLoaded', selector);
 			if (!selector)
@@ -474,7 +492,7 @@
 		username = opts ? opts.username : undefined;
 		timeout = opts ? opts.timeout : 10000;
 
-		var xmlhttp = new XMLHttpRequest();
+		let xmlhttp = new XMLHttpRequest();
 		if (contentType)
 		    xmlhttp.setRequestHeader('Content-Type', contentType);
 		if (mimeType)
@@ -496,7 +514,7 @@
 		xmlhttp.onreadystatechange = () => {
 		    if (xmlhttp.readyState !== 4)
 			    return;
-		    clearTimeout(timeout);
+		    clearTimeout(timer);
 
 		    if (xmlhttp.status == 200 && xmlhttp.response != null) {
 				if (typeof success == 'function')
@@ -515,7 +533,7 @@
 
 		xmlhttp.send(method == 'GET' ? null : data);
 
-		var timeout = setTimeout(() => {
+		let timer = setTimeout(() => {
 			xmlhttp.abort();
 			error(xmlhttp, 'timeout');
 		}, timeout);
